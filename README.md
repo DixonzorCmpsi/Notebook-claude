@@ -33,8 +33,8 @@ All heavy lifting — transcription, RAG, synthesis, generation — runs inside 
 ## Quick Start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
+git clone https://github.com/DixonzorCmpsi/Notebook-cluade.git
+cd Notebook-cluade
 
 # Mac/Linux
 bash setup.sh
