@@ -1,4 +1,4 @@
-# setup.ps1 — YouTube Research + NotebookLM workflow for Claude Code
+# setup.ps1 -- YouTube Research + NotebookLM workflow for Claude Code
 # Run once after cloning: .\setup.ps1
 # If blocked by execution policy: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
@@ -10,11 +10,11 @@ function Info($msg) { Write-Host "==> $msg" -ForegroundColor Cyan }
 function Fail($msg) { Write-Host "[FAIL] $msg" -ForegroundColor Red; exit 1 }
 
 Write-Host ""
-Write-Host "YouTube Research + NotebookLM — Setup" -ForegroundColor White
+Write-Host "YouTube Research + NotebookLM -- Setup" -ForegroundColor White
 Write-Host "======================================" -ForegroundColor White
 Write-Host ""
 
-# ── 1. Prerequisites ──────────────────────────────────────────────────────────
+# -- 1. Prerequisites ----------------------------------------------------------
 Info "Checking prerequisites..."
 
 # Node.js 18+
@@ -34,7 +34,7 @@ try {
 $pythonCmd = $null
 foreach ($cmd in @("python", "python3")) {
   try {
-    $pyVer = & $cmd -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null
+    $pyVer = & $cmd -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))" 2>$null
     $parts = $pyVer.Split('.')
     if ([int]$parts[0] -ge 3 -and [int]$parts[1] -ge 9) {
       $pythonCmd = $cmd
@@ -52,12 +52,12 @@ try {
   $claudeVer = claude --version 2>$null | Select-Object -First 1
   Ok "Claude Code $claudeVer"
 } catch {
-  Warn "Claude Code not found — install at https://claude.ai/download, then re-run"
+  Warn "Claude Code not found -- install at https://claude.ai/download, then re-run"
 }
 
 Write-Host ""
 
-# ── 2. Python packages ────────────────────────────────────────────────────────
+# -- 2. Python packages --------------------------------------------------------
 Info "Installing Python packages..."
 
 # Find pip
@@ -71,7 +71,6 @@ try {
   & $pipCmd.Split()[0] ($pipCmd.Split()[1..99] + @("install", "notebooklm-py[browser]", "--quiet"))
   Ok "notebooklm-py installed"
 } catch {
-  # Try python -m pip as fallback
   & $pythonCmd -m pip install "notebooklm-py[browser]" --quiet
   Ok "notebooklm-py installed"
 }
@@ -88,12 +87,12 @@ try {
   playwright install chromium 2>$null
   Ok "Playwright Chromium installed"
 } catch {
-  Warn "playwright install chromium failed — try running it manually"
+  Warn "playwright install chromium failed -- try running it manually"
 }
 
 Write-Host ""
 
-# ── 3. Install yt-search skill ────────────────────────────────────────────────
+# -- 3. Install yt-search skill ------------------------------------------------
 Info "Installing yt-search skill..."
 
 $ytSkillDir = Join-Path $env:USERPROFILE ".claude\skills\yt-search\scripts"
@@ -105,16 +104,21 @@ Ok "yt-search skill -> $env:USERPROFILE\.claude\skills\yt-search"
 
 Write-Host ""
 
-# ── 4. Install notebooklm skill ───────────────────────────────────────────────
+# -- 4. Install notebooklm skill -----------------------------------------------
 Info "Installing notebooklm skill..."
 
-# notebooklm may not be on PATH yet after pip install — find it
-$notebooklmExe = (Get-Command notebooklm -ErrorAction SilentlyContinue)?.Source
+# notebooklm may not be on PATH yet after pip install -- find it (PS5 compatible)
+$notebooklmExe = $null
+$nlmCmd = Get-Command notebooklm -ErrorAction SilentlyContinue
+if ($nlmCmd) {
+  $notebooklmExe = $nlmCmd.Source
+}
 if (-not $notebooklmExe) {
-  # Common Windows locations
   foreach ($candidate in @(
     "$env:APPDATA\Python\Scripts\notebooklm.exe",
     "$env:LOCALAPPDATA\Programs\Python\Python311\Scripts\notebooklm.exe",
+    "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts\notebooklm.exe",
+    "$env:LOCALAPPDATA\Programs\Python\Python313\Scripts\notebooklm.exe",
     "$env:LOCALAPPDATA\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts\notebooklm.exe"
   )) {
     if (Test-Path $candidate) { $notebooklmExe = $candidate; break }
@@ -131,7 +135,7 @@ if ($notebooklmExe) {
 }
 
 if (-not $skillInstalled) {
-  Warn "notebooklm skill install failed — falling back to bundled snapshot"
+  Warn "notebooklm skill install failed -- falling back to bundled snapshot"
   $nlmDir = Join-Path $env:USERPROFILE ".claude\skills\notebooklm"
   New-Item -ItemType Directory -Force -Path $nlmDir | Out-Null
   Copy-Item "skills\notebooklm\SKILL.md" (Join-Path $nlmDir "SKILL.md") -Force
@@ -141,7 +145,7 @@ if (-not $skillInstalled) {
 
 Write-Host ""
 
-# ── 5. Project config ─────────────────────────────────────────────────────────
+# -- 5. Project config ---------------------------------------------------------
 Info "Setting up project config..."
 
 $config   = ".claude\settings.local.json"
@@ -151,12 +155,12 @@ if (-not (Test-Path $config)) {
   Copy-Item $template $config
   Ok "Created $config from template"
 } else {
-  Ok "$config already exists — skipping (delete it to reset)"
+  Ok "$config already exists -- skipping (delete it to reset)"
 }
 
 Write-Host ""
 
-# ── 6. Done ───────────────────────────────────────────────────────────────────
+# -- 6. Done -------------------------------------------------------------------
 Write-Host "Setup complete. Two manual steps remaining:" -ForegroundColor White
 Write-Host ""
 Write-Host "  1. Authenticate with NotebookLM (opens browser):"
@@ -166,7 +170,7 @@ Write-Host "  2. Open Claude Code in this folder:"
 Write-Host "     claude"
 Write-Host ""
 Write-Host "  Your TRANSCRIPT_API_KEY for yt-search will be set automatically"
-Write-Host "  on first use — the skill will prompt you for your email."
+Write-Host "  on first use -- the skill will prompt you for your email."
 Write-Host ""
 Write-Host "  See prompts/ for ready-to-use workflow prompts."
 Write-Host ""
