@@ -35,20 +35,20 @@ else
   fail "Node.js not found. Install at https://nodejs.org"
 fi
 
-# Python 3.9+
+# Python 3.10+
 PYTHON=""
 for cmd in python3 python; do
   if command -v "$cmd" &>/dev/null; then
     PY_MINOR=$("$cmd" -c "import sys; print(sys.version_info.minor)" 2>/dev/null || echo 0)
     PY_MAJOR=$("$cmd" -c "import sys; print(sys.version_info.major)" 2>/dev/null || echo 0)
-    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 9 ]; then
+    if [ "$PY_MAJOR" -ge 3 ] && [ "$PY_MINOR" -ge 10 ]; then
       PYTHON="$cmd"
       ok "Python $($cmd --version)"
       break
     fi
   fi
 done
-[ -z "$PYTHON" ] && fail "Python 3.9+ required. Install at https://python.org"
+[ -z "$PYTHON" ] && fail "Python 3.10+ required. Install at https://python.org"
 
 # Claude Code (warn only, don't fail)
 if command -v claude &>/dev/null; then
@@ -68,9 +68,18 @@ for cmd in pip3 pip; do
 done
 [ -z "$PIP" ] && PIP="$PYTHON -m pip"
 
-$PIP install "notebooklm-py[browser]" --quiet && ok "notebooklm-py installed"
-$PIP install yt-dlp --quiet && ok "yt-dlp installed"
-playwright install chromium --quiet 2>/dev/null && ok "Playwright Chromium installed"
+if $PIP install "notebooklm-py[browser]" --quiet 2>/dev/null || $PIP install --break-system-packages "notebooklm-py[browser]" --quiet 2>/dev/null; then
+  ok "notebooklm-py installed"
+else
+  fail "Failed to install notebooklm-py. You may need to use a virtual environment."
+fi
+
+if $PIP install yt-dlp --quiet 2>/dev/null || $PIP install --break-system-packages yt-dlp --quiet 2>/dev/null; then
+  ok "yt-dlp installed"
+else
+  fail "Failed to install yt-dlp."
+fi
+$PYTHON -m playwright install --quiet 2>/dev/null && ok "Playwright browsers installed"
 
 echo ""
 

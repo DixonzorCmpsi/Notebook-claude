@@ -23,7 +23,7 @@ All heavy lifting — transcription, RAG, synthesis, generation — runs inside 
 | Requirement | Version | Install |
 |-------------|---------|---------|
 | [Claude Code](https://claude.ai/download) | Latest | `npm install -g @anthropic-ai/claude-code` |
-| [Python](https://python.org) | 3.9+ | python.org |
+| [Python](https://python.org) | 3.10+ | python.org |
 | [Node.js](https://nodejs.org) | 18+ | nodejs.org |
 | Google account | — | For NotebookLM |
 | TranscriptAPI account | — | Free (100 credits) — set up automatically on first use |
@@ -37,6 +37,8 @@ git clone https://github.com/DixonzorCmpsi/Notebook-claude.git
 cd Notebook-claude
 
 # Mac/Linux
+# macOS users: Ensure Python 3.10+ is installed (e.g. `brew install python`) 
+# and Homebrew is on your PATH (e.g. `export PATH="/opt/homebrew/bin:$PATH"`)
 bash setup.sh
 
 # Windows (PowerShell)
@@ -141,7 +143,7 @@ Skills are installed globally to `~/.claude/skills/` by the setup script and ava
 ## Troubleshooting
 
 **`notebooklm` not found after setup:**
-Restart your terminal. Python's `Scripts/` directory may not be on PATH until you do.
+Restart your terminal. Python's `Scripts/` directory may not be on PATH until you do. If you use Homebrew Python, you may need to add `export PATH="/opt/homebrew/bin:$PATH"` to your `~/.zshrc`.
 
 **NotebookLM auth errors:**
 Run `notebooklm login` again. Sessions expire after a few weeks.
@@ -176,8 +178,8 @@ git pull
 bash setup.sh        # Mac/Linux
 .\setup.ps1          # Windows
 
-# Update notebooklm-py
-pip install --upgrade notebooklm-py
+# Update notebooklm-py (use --break-system-packages if on Homebrew Python 3.12+)
+pip install --upgrade notebooklm-py || pip install --upgrade --break-system-packages notebooklm-py
 notebooklm skill install
 ```
 
@@ -188,3 +190,5 @@ notebooklm skill install
 - **YouTube search** — [TranscriptAPI.com](https://transcriptapi.com) · [ZeroPointRepo/youtube-skills](https://github.com/ZeroPointRepo/youtube-skills)
 - **NotebookLM automation** — [notebooklm-py](https://github.com/teng-lin/notebooklm-py) by teng-lin
 - **Agent runtime** — [Claude Code](https://claude.ai/download) by Anthropic
+chmod +x setup.sh if needed for permissions.
+
