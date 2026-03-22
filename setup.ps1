@@ -77,6 +77,14 @@ try {
 }
 
 try {
+  & $pipCmd.Split()[0] ($pipCmd.Split()[1..99] + @("install", "yt-dlp", "--quiet"))
+  Ok "yt-dlp installed"
+} catch {
+  & $pythonCmd -m pip install "yt-dlp" --quiet
+  Ok "yt-dlp installed"
+}
+
+try {
   playwright install chromium 2>$null
   Ok "Playwright Chromium installed"
 } catch {
@@ -91,6 +99,7 @@ Info "Installing yt-search skill..."
 $ytSkillDir = Join-Path $env:USERPROFILE ".claude\skills\yt-search\scripts"
 New-Item -ItemType Directory -Force -Path $ytSkillDir | Out-Null
 Copy-Item "skills\yt-search\SKILL.md" (Join-Path $env:USERPROFILE ".claude\skills\yt-search\SKILL.md") -Force
+Copy-Item "skills\yt-search\scripts\yt_search.py" (Join-Path $ytSkillDir "yt_search.py") -Force
 Copy-Item "skills\yt-search\scripts\tapi-auth.js" (Join-Path $ytSkillDir "tapi-auth.js") -Force
 Ok "yt-search skill -> $env:USERPROFILE\.claude\skills\yt-search"
 

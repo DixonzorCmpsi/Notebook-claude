@@ -69,6 +69,7 @@ done
 [ -z "$PIP" ] && PIP="$PYTHON -m pip"
 
 $PIP install "notebooklm-py[browser]" --quiet && ok "notebooklm-py installed"
+$PIP install yt-dlp --quiet && ok "yt-dlp installed"
 playwright install chromium --quiet 2>/dev/null && ok "Playwright Chromium installed"
 
 echo ""
@@ -79,6 +80,7 @@ info "Installing yt-search skill..."
 YT_SKILL_DIR="$HOME/.claude/skills/yt-search"
 mkdir -p "$YT_SKILL_DIR/scripts"
 cp skills/yt-search/SKILL.md "$YT_SKILL_DIR/SKILL.md"
+cp skills/yt-search/scripts/yt_search.py "$YT_SKILL_DIR/scripts/yt_search.py"
 cp skills/yt-search/scripts/tapi-auth.js "$YT_SKILL_DIR/scripts/tapi-auth.js"
 ok "yt-search skill → $YT_SKILL_DIR"
 

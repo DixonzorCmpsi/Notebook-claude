@@ -1,147 +1,84 @@
 ---
 name: yt-search
-description: Search YouTube for videos and channels, search within specific channels, then fetch transcripts. Use when the user asks to "find videos about X", "search YouTube for", "look up a channel", "who makes videos about", "find on youtube", or wants to discover YouTube content on a topic.
-homepage: https://transcriptapi.com
+description: Search YouTube for videos. Free — no API key required. Use when the user wants to find YouTube videos, tutorials, or other video content, or says "find videos about X", "search YouTube for", "look up on YouTube".
 user-invocable: true
+argument-hint: <search query> [count]
 ---
 
 # YouTube Search
 
-Search YouTube and fetch transcripts via [TranscriptAPI.com](https://transcriptapi.com).
+Free YouTube search via yt-dlp — no API key, no credits, no cost.
 
 ## Setup
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
-
-**Step 1 — Register:** Ask user for their email.
+Requires yt-dlp (installed once):
 
 ```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
+pip install yt-dlp
 ```
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
+The search script is at `scripts/yt_search.py` inside this skill directory.
 
-**Step 2 — Verify:** Once user provides the OTP:
+## Running a Search
 
 ```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
+python ~/.claude/skills/yt-search/scripts/yt_search.py "QUERY" --limit 20
 ```
 
-> API key saved to your shell profile and agent config. Ready to use.
+**Options:**
 
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--limit N` | 20 | Max results (1–50) |
+| `--after YYYYMMDD` | — | Only videos uploaded after this date |
+| `--json` | — | Output as JSON instead of table |
 
-## API Reference
-
-Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
-
-## GET /api/v2/youtube/search — 1 credit
-
-Search YouTube globally for videos or channels.
+**Examples:**
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+# Basic search
+python ~/.claude/skills/yt-search/scripts/yt_search.py "claude code skills" --limit 20
+
+# Last month only
+python ~/.claude/skills/yt-search/scripts/yt_search.py "AI agent harness" --limit 20 --after 20250201
+
+# JSON output for piping / programmatic use
+python ~/.claude/skills/yt-search/scripts/yt_search.py "agentic AI" --limit 10 --json
 ```
 
-| Param   | Required | Default | Validation            |
-| ------- | -------- | ------- | --------------------- |
-| `q`     | yes      | —       | 1-200 chars (trimmed) |
-| `type`  | no       | `video` | `video` or `channel`  |
-| `limit` | no       | `20`    | 1-50                  |
+## Output
 
-**Video search response:**
+Each result includes:
+- `title` — video title
+- `channel` — channel name
+- `views` / `views_text` — view count
+- `duration` — video length
+- `published` — upload date (when available)
+- `url` — full YouTube URL
 
-```json
-{
-  "results": [
-    {
-      "type": "video",
-      "videoId": "dQw4w9WgXcQ",
-      "title": "Rick Astley - Never Gonna Give You Up",
-      "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
-      "channelTitle": "Rick Astley",
-      "channelHandle": "@RickAstley",
-      "channelVerified": true,
-      "lengthText": "3:33",
-      "viewCountText": "1.5B views",
-      "publishedTimeText": "14 years ago",
-      "hasCaptions": true,
-      "thumbnails": [{ "url": "...", "width": 120, "height": 90 }]
-    }
-  ],
-  "result_count": 20
-}
-```
+## Multi-Query Workflow (Deduplicated)
 
-**Channel search response** (`type=channel`):
-
-```json
-{
-  "results": [{
-    "type": "channel",
-    "channelId": "UCuAXFkgsw1L7xaCfnd5JJOw",
-    "title": "Rick Astley",
-    "handle": "@RickAstley",
-    "url": "https://www.youtube.com/@RickAstley",
-    "description": "Official channel...",
-    "subscriberCount": "4.2M subscribers",
-    "verified": true,
-    "rssUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC...",
-    "thumbnails": [...]
-  }],
-  "result_count": 5
-}
-```
-
-## GET /api/v2/youtube/channel/search — 1 credit
-
-Search videos within a specific channel. Accepts `channel` — an `@handle`, channel URL, or `UC...` ID.
+When covering a topic from multiple angles, run 2–3 searches and deduplicate by video ID:
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel=@TED&q=climate+change&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+python ~/.claude/skills/yt-search/scripts/yt_search.py "AI agent harness problem" --limit 20 --json
+python ~/.claude/skills/yt-search/scripts/yt_search.py "agentic AI security 2025" --limit 20 --json
+python ~/.claude/skills/yt-search/scripts/yt_search.py "agent control problem" --limit 20 --json
 ```
 
-| Param     | Required | Validation                                |
-| --------- | -------- | ----------------------------------------- |
-| `channel` | yes      | `@handle`, channel URL, or `UC...` ID     |
-| `q`       | yes      | 1-200 chars                               |
-| `limit`   | no       | 1-50 (default 30)                         |
+Merge results, deduplicate on `video_id`, sort by `views` descending, take top 20.
 
-Returns up to ~30 results (YouTube limit). Same video response shape as global search.
+## Getting Transcripts (Optional)
 
-## GET /api/v2/youtube/channel/resolve — FREE
-
-Convert @handle to channel ID:
+yt-dlp can also pull captions from videos that have them:
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+# Auto-generated captions (saves as .vtt file)
+yt-dlp --write-auto-subs --sub-format vtt --skip-download "VIDEO_URL" -o "%(title)s"
 ```
 
-## Workflow: Search → Transcript
+## Notes
 
-```bash
-# 1. Search for videos
-curl -s "https://transcriptapi.com/api/v2/youtube/search\
-?q=python+web+scraping&type=video&limit=5" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-
-# 2. Get transcript from result
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
-
-## Errors
-
-| Code | Action                                 |
-| ---- | -------------------------------------- |
-| 402  | No credits — transcriptapi.com/billing |
-| 404  | Not found                              |
-| 408  | Timeout — retry once                   |
-| 422  | Invalid channel identifier             |
-
-Free tier: 100 credits, 300 req/min.
+- yt-dlp uses YouTube's public metadata — no login required
+- `--after` filtering may not work in flat-playlist/search mode; filter results by `published` date in post-processing if needed
+- Rate limiting is rare for searches; if hit, wait 60 seconds and retry
