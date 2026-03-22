@@ -15,6 +15,23 @@
 *.csv
 outputs/
 
+# User source files in sources/ (may be large or sensitive)
+# Commit sources/README.md but not the actual files
+sources/*.pdf
+sources/*.docx
+sources/*.txt
+sources/*.mp3
+sources/*.mp4
+sources/*.jpg
+sources/*.jpeg
+sources/*.png
+sources/*.gif
+sources/*.webp
+sources/*.wav
+sources/*.m4a
+# Exception: keep .md files in sources/ if you want to commit your own docs
+# sources/*.md
+
 # Python
 __pycache__/
 *.pyc

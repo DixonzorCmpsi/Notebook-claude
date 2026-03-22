@@ -14,6 +14,7 @@ When a user opens this project without a specific request, greet them and ask th
    - Report / study guide (downloads as .md)
    - Just the analysis — no file, chat only
 4. **Any extra context?** — a specific angle, audience, framing, or your own notes you want woven into the output. Optional.
+5. **Local files** — automatically check the `sources/` folder for any files. If files are present, tell the user what was found and confirm they should be included. If the folder is empty, mention they can drop PDFs, markdown docs, text files, etc. in `sources/` before running.
 
 Once you have their answers, run the full pipeline without further prompting.
 
@@ -43,10 +44,25 @@ Add all video URLs as sources:
 notebooklm source add "https://youtube.com/watch?v=VIDEO_ID"
 ```
 
-If the user provided extra context, add it as a text source:
+If the user provided extra context text, add it as a text source:
 ```bash
 notebooklm source add "USER CONTEXT TEXT" --title "My Context"
 ```
+
+**Add any files found in `sources/`** (skip `sources/README.md`):
+```bash
+# Check what's in sources/
+ls sources/
+
+# Add each file — NotebookLM auto-detects type from extension
+notebooklm source add ./sources/my-doc.pdf
+notebooklm source add ./sources/dsl-spec.md
+notebooklm source add ./sources/notes.txt
+# etc.
+```
+
+Supported: `.pdf`, `.md`, `.txt`, `.docx`, `.mp3`, `.mp4`, `.jpg`, `.png`, and more.
+Tell the user which files were added before proceeding.
 
 Poll until all sources are ready:
 ```bash
