@@ -1,0 +1,36 @@
+# Personal config — copy from .claude/settings.local.json.template
+.claude/settings.local.json
+
+# Credentials
+.env
+*.key
+~/.transcriptapi
+
+# Generated outputs (NotebookLM deliverables)
+*.mp3
+*.mp4
+*.pptx
+*.pdf
+*.png
+*.csv
+outputs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.swp
+*.swo
